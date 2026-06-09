@@ -1,7 +1,7 @@
 {
-  "name": "Çekim Takip",
-  "short_name": "Çekimler",
-  "description": "Fotoğraf çekimi takip uygulaması",
+  "name": "Çekim Kazanç Takibi",
+  "short_name": "Çekim Takip",
+  "description": "Fotoğraf çekimi ve kazanç takip uygulaması",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#111111",
