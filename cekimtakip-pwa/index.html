@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#111111">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Çekimler">
+<title>Çekimler</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg:#ffffff;--bg2:#f5f5f4;--bg3:#efefed;
+    --text:#111111;--text2:#666660;--text3:#999992;
+    --border:rgba(0,0,0,0.12);--border2:rgba(0,0,0,0.20);
+    --success:#15803d;--success-bg:#f0fdf4;
+    --warning:#b45309;--warning-bg:#fffbeb;
+    --danger:#b91c1c;--danger-bg:#fef2f2;
+    --info:#1d4ed8;--info-bg:#eff6ff;
+    --radius:8px;--radius-lg:12px;--radius-xl:16px;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#1a1a18;--bg2:#252523;--bg3:#2e2e2b;
+      --text:#f0ede6;--text2:#a09d96;--text3:#6b6860;
+      --border:rgba(255,255,255,0.10);--border2:rgba(255,255,255,0.18);
+      --success:#4ade80;--success-bg:#052e16;
+      --warning:#fbbf24;--warning-bg:#1c1200;
+      --danger:#f87171;--danger-bg:#1f0000;
+      --info:#60a5fa;--info-bg:#0c1a3a;
+    }
+  }
+  html,body{height:100%;background:var(--bg3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--text);overflow:hidden}
+  .app{display:flex;flex-direction:column;height:100%;max-width:480px;margin:0 auto;background:var(--bg3)}
+  .topbar{background:var(--bg);border-bottom:0.5px solid var(--border);padding:env(safe-area-inset-top,0px) 16px 0;flex-shrink:0}
+  .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:13px 0 9px}
+  .topbar-title{font-size:19px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px}
+  .topbar-title svg{width:20px;height:20px;stroke:var(--text);stroke-width:1.8;fill:none}
+  .topbar-date{font-size:11px;color:var(--text2);padding-bottom:8px}
+  .tabs{display:flex;background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:1;min-width:52px;padding:9px 4px;font-size:10px;border:none;background:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px;transition:color 0.15s}
+  .tab svg{width:18px;height:18px;stroke:currentColor;stroke-width:1.8;fill:none;flex-shrink:0}
+  .tab.active{color:var(--text);font-weight:600;border-bottom-color:var(--text)}
+  .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .screen{display:none;padding:12px;padding-bottom:calc(env(safe-area-inset-bottom,0px)+16px);flex-direction:column;gap:10px}
+  .screen.active{display:flex}
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .stat{background:var(--bg2);border-radius:var(--radius);padding:12px 13px}
+  .stat-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px}
+  .stat-val{font-size:22px;font-weight:600;color:var(--text);margin-top:3px}
+  .stat-val.g{color:var(--success)}
+  .stat-val.a{color:var(--warning)}
+  .sec-lbl{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:0.6px;margin-top:4px}
+  .card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px;cursor:pointer;transition:background 0.1s}
+  .card:active{background:var(--bg2)}
+  .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+  .card-date{font-size:12px;color:var(--text2)}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
+  .b-ok{background:var(--success-bg);color:var(--success)}
+  .b-wait{background:var(--warning-bg);color:var(--warning)}
+  .b-no{background:var(--danger-bg);color:var(--danger)}
+  .card-subj{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+  .card-meta{font-size:12px;color:var(--text2);display:flex;gap:8px;flex-wrap:wrap}
+  .card-amts{display:flex;gap:12px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--border)}
+  .amt{display:flex;flex-direction:column}
+  .amt-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.4px}
+  .amt-val{font-size:13px;font-weight:500;color:var(--text)}
+  .del-btn{background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;padding:4px 8px;margin-left:auto;display:flex;align-items:center;gap:3px}
+  .del-btn svg{width:13px;height:13px;stroke:currentColor;stroke-width:2;fill:none}
+  .filter-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+  .filter-row::-webkit-scrollbar{display:none}
+  .chip{padding:6px 13px;border-radius:20px;border:0.5px solid var(--border);background:none;font-size:12px;cursor:pointer;color:var(--text2);white-space:nowrap;transition:all 0.12s}
+  .chip.active{background:var(--text);color:var(--bg);border-color:var(--text)}
+  .empty{text-align:center;padding:32px 16px;color:var(--text2);font-size:13px}
+  .fab-area{display:flex;justify-content:flex-end;padding-top:4px}
+  .fab{background:var(--text);color:var(--bg);border:none;border-radius:var(--radius-lg);padding:12px 20px;font-size:14px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .fab svg{width:16px;height:16px;stroke:currentColor;stroke-width:2.5;fill:none}
+  .bar-wrap{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:12px 14px}
+  .bar-name{font-size:13px;color:var(--text);font-weight:500;margin-bottom:3px}
+  .bar-sub{font-size:11px;color:var(--text2);margin-bottom:7px}
+  .bar-track{background:var(--bg2);border-radius:3px;height:8px;overflow:hidden;margin-bottom:4px}
+  .bar-fill{height:100%;border-radius:3px;background:var(--text);transition:width 0.4s}
+  .bar-row{display:flex;justify-content:space-between;font-size:11px;color:var(--text2)}
+  .pg-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:13px 15px;display:flex;align-items:center;gap:12px}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--info-bg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--info);flex-shrink:0}
+  .pg-info{flex:1;min-width:0}
+  .pg-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pg-stats{font-size:12px;color:var(--text2);margin-top:2px}
+  .pg-del{background:none;border:none;color:var(--danger);cursor:pointer;padding:8px;display:flex;align-items:center}
+  .pg-del svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+  .pg-input-row{display:flex;gap:8px}
+  .pg-input-row input{flex:1}
+  .pg-add-btn{padding:10px 16px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-size:13px;cursor:pointer;font-weight:500;white-space:nowrap;display:flex;align-items:center;gap:4px}
+  .pg-add-btn svg{width:14px;height:14px;stroke:currentColor;stroke-width:2.5;fill:none}
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .cal-nav{background:none;border:0.5px solid var(--border);border-radius:var(--radius);padding:6px 13px;cursor:pointer;font-size:13px;color:var(--text2);display:flex;align-items:center}
+  .cal-nav svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none}
+  .cal-title{font-size:15px;font-weight:600;color:var(--text)}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+  .cal-dow{text-align:center;font-size:10px;color:var(--text3);padding:3px 0;text-transform:uppercase}
+  .cal-day{text-align:center;font-size:12px;padding:6px 2px;border-radius:var(--radius);color:var(--text2);cursor:default;user-select:none}
+  .cal-day.has{color:var(--text);font-weight:600;background:var(--bg2);cursor:pointer}
+  .cal-day.has:active{background:var(--bg3)}
+  .cal-day.today{border:0.5px solid var(--border2)}
+  .cal-day.sel{background:var(--info-bg)!important;color:var(--info)!important}
+  .cal-dot{width:4px;height:4px;border-radius:50%;background:var(--success);margin:2px auto 0}
+  .day-title{font-size:14px;font-weight:500;padding:2px 2px 8px;color:var(--text)}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:flex-end;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:var(--bg);border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:16px 16px calc(env(safe-area-inset-bottom,0px)+24px);width:100%;max-width:480px;max-height:90vh;overflow-y:auto}
+  .mhandle{width:34px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 14px}
+  .mtitle{font-size:16px;font-weight:600;margin-bottom:14px;color:var(--text)}
+  .fld{margin-bottom:11px}
+  .fld label{display:block;font-size:11px;color:var(--text2);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+  .fld input,.fld select{width:100%;padding:10px 12px;border:0.5px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);font-size:14px;font-family:inherit;appearance:none;-webkit-appearance:none;outline:none}
+  .fld input:focus,.fld select:focus{border-color:var(--text);box-shadow:0 0 0 2px rgba(0,0,0,0.08)}
+  .fld-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .btn-row{display:flex;gap:8px;margin-top:10px}
+  .btn-save{flex:1;padding:13px;background:var(--text);color:var(--bg);border:none;border-radius:var(--radius);font-size:15px;font-weight:600;cursor:pointer}
+  .btn-cancel{padding:13px 16px;background:none;border:0.5px solid var(--border2);border-radius:var(--radius);font-size:15px;cursor:pointer;color:var(--text2)}
+  .divider{height:0.5px;background:var(--border);margin:4px 0}
+  .yil-card{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);padding:15px 16px;cursor:pointer;transition:background 0.1s;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .yil-card:active{background:var(--bg2)}
+  .yil-card.sel{border-color:var(--text);background:var(--bg2)}
+  .yil-num{font-size:24px;font-weight:700;color:var(--text)}
+  .yil-right{text-align:right}
+  .yil-cekim{font-size:12px;color:var(--text2);margin-bottom:2px}
+  .yil-kazanc{font-size:15px;font-weight:600;color:var(--success)}
+  .yil-arrow{width:16px;height:16px;stroke:var(--text3);stroke-width:2;fill:none;margin-left:10px;flex-shrink:0}
+  .yil-detail{background:var(--bg);border:0.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+  .yil-ozet-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);margin-bottom:1px}
+  .yil-ozet-item{background:var(--bg);padding:11px 10px}
+  .yil-ozet-lbl{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px}
+  .yil-ozet-val{font-size:15px;font-weight:600;color:var(--text);margin-top:2px}
+  .yil-ozet-val.g{color:var(--success)}
+  .yil-ozet-val.a{color:var(--warning)}
+  .yil-ay-list{padding:4px 0}
+  .yil-ay-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:0.5px solid var(--border)}
+  .yil-ay-row:last-child{border-bottom:none}
+  .yil-ay-name{font-size:13px;font-weight:500;color:var(--text)}
+  .yil-ay-cnt{font-size:11px;color:var(--text2);margin-top:1px}
+  .yil-ay-kazanc{font-size:13px;font-weight:600;color:var(--success)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-title">
+        <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        ÇEKİMLER
+      </div>
+    </div>
+    <div class="topbar-date" id="topbar-date"></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('ozet')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Özet
+    </button>
+    <button class="tab" onclick="showTab('takvim')">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Takvim
+    </button>
+    <button class="tab" onclick="showTab('liste')">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="3" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="3" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Liste
+    </button>
+    <button class="tab" onclick="showTab('foto')">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Fotoğrafçılar
+    </button>
+    <button class="tab" onclick="showTab('stat')">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      İstatistik
+    </button>
+    <button class="tab" onclick="showTab('yillar')">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Yıllar
+    </button>
+  </div>
+
+  <div class="content">
+    <!-- ÖZET -->
+    <div class="screen active" id="screen-ozet">
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-lbl">Toplam çekim</div><div class="stat-val" id="s-toplam">0</div></div>
+        <div class="stat"><div class="stat-lbl">Bu ay</div><div class="stat-val" id="s-ay">0</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-lbl">Toplam kazanç</div><div class="stat-val g" id="s-kazanc">₺0</div></div>
+        <div class="stat"><div class="stat-lbl">Bekleyen ödeme</div><div class="stat-val a" id="s-bekleyen">₺0</div></div>
+      </div>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-lbl">Toplam bahşiş</div><div class="stat-val g" id="s-bahsis">₺0</div></div>
+        <div class="stat"><div class="stat-lbl">Fotoğrafçı sayısı</div><div class="stat-val" id="s-foto">0</div></div>
+      </div>
+      <div class="sec-lbl">Son çekimler</div>
+      <div id="ozet-son"></div>
+      <div class="fab-area">
+        <button class="fab" onclick="openModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni çekim
+        </button>
+      </div>
+    </div>
+
+    <!-- TAKVİM -->
+    <div class="screen" id="screen-takvim">
+      <div class="card" style="cursor:default">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="calMove(-1)"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <div class="cal-title" id="cal-title"></div>
+          <button class="cal-nav" onclick="calMove(1)"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+      <div id="cal-detail"></div>
+      <div class="fab-area">
+        <button class="fab" onclick="openModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni çekim
+        </button>
+      </div>
+    </div>
+
+    <!-- LİSTE -->
+    <div class="screen" id="screen-liste">
+      <div class="filter-row">
+        <button class="chip active" onclick="setFilter('hepsi',this)">Hepsi</button>
+        <button class="chip" onclick="setFilter('odendi',this)">Ödendi</button>
+        <button class="chip" onclick="setFilter('bekliyor',this)">Bekliyor</button>
+        <button class="chip" onclick="setFilter('odenmedi',this)">Ödenmedi</button>
+      </div>
+      <div id="liste-list"></div>
+      <div class="fab-area">
+        <button class="fab" onclick="openModal()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Yeni çekim
+        </button>
+      </div>
+    </div>
+
+    <!-- FOTOĞRAFÇILAR -->
+    <div class="screen" id="screen-foto">
+      <div class="pg-input-row">
+        <div class="fld" style="flex:1;margin:0"><input type="text" id="pg-yeni" placeholder="Fotoğrafçı adı ekle..." maxlength="50" onkeydown="if(event.key==='Enter')addFoto()"></div>
+        <button class="pg-add-btn" onclick="addFoto()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Ekle
+        </button>
+      </div>
+      <div id="foto-list"></div>
+    </div>
+
+    <!-- YILLAR -->
+    <div class="screen" id="screen-yillar">
+      <div id="yillar-list"></div>
+      <div id="yillar-detail"></div>
+    </div>
+
+    <!-- İSTATİSTİK -->
+    <div class="screen" id="screen-stat">
+      <div class="sec-lbl">Fotoğrafçıya göre çekim & kazanç</div>
+      <div id="stat-foto-bars"></div>
+      <div class="sec-lbl" style="margin-top:4px">Aylık kazanç (son 6 ay)</div>
+      <div id="stat-ay-bars"></div>
+      <div class="sec-lbl" style="margin-top:4px">En çok çekilen yer</div>
+      <div id="stat-yer-bars"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="modal-title">Yeni çekim ekle</div>
+    <input type="hidden" id="edit-id">
+    <div class="fld"><label>Tarih</label><input type="date" id="f-tarih"></div>
+    <div class="fld"><label>Kimin çekimi</label>
+      <select id="f-kimle"><option value="">-- Seçiniz --</option></select>
+    </div>
+    <div class="fld"><label>Kimle gittin</label>
+      <input type="text" id="f-kimlegitti" placeholder="Birlikte gittiğin kişi(ler)...">
+    </div>
+    <div class="fld-row">
+      <div class="fld"><label>Nerde çektin</label><input type="text" id="f-nerde" placeholder="Konum..."></div>
+      <div class="fld"><label>Neyi çektin</label><input type="text" id="f-neyi" placeholder="Konu..."></div>
+    </div>
+    <div class="fld"><label>Ne çektin (ekipman / tür)</label><input type="text" id="f-ne" placeholder="Düğün, video, portrait..."></div>
+    <div class="fld-row">
+      <div class="fld"><label>Bahşiş (₺)</label><input type="number" id="f-bahsis" placeholder="0" min="0" inputmode="numeric"></div>
+      <div class="fld"><label>Yevmiye (₺)</label><input type="number" id="f-yevmiye" placeholder="0" min="0" inputmode="numeric"></div>
+    </div>
+    <div class="fld"><label>Ödeme durumu</label>
+      <select id="f-odeme">
+        <option value="bekliyor">Bekliyor</option>
+        <option value="odendi">Ödendi</option>
+        <option value="odenmedi">Ödenmedi</option>
+      </select>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeModal()">İptal</button>
+      <button class="btn-save" onclick="saveRecord()">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DKEY='cekimler_v1',PKEY='cekimler_fotografcilar_v1';
+let data=[],fotografcilar=[],filterState='hepsi',calYear,calMonth,selDay=null,selYil=null;
+
+function load(){
+  try{const d=localStorage.getItem(DKEY);if(d)data=JSON.parse(d);}catch(e){}
+  try{const p=localStorage.getItem(PKEY);if(p)fotografcilar=JSON.parse(p);}catch(e){}
+  renderAll();
+}
+function persist(){
+  try{localStorage.setItem(DKEY,JSON.stringify(data));}catch(e){}
+  try{localStorage.setItem(PKEY,JSON.stringify(fotografcilar));}catch(e){}
+}
+function tl(n){return '₺'+Math.round(+n||0).toLocaleString('tr-TR');}
+function today(){return new Date().toISOString().split('T')[0];}
+function fmtDate(d){if(!d)return '';const p=d.split('-');return p[2]+'.'+p[1]+'.'+p[0];}
+function thisMonth(){const n=new Date();return n.getFullYear()+'-'+(n.getMonth()+1).toString().padStart(2,'0');}
+function badgeCls(o){return o==='odendi'?'b-ok':o==='odenmedi'?'b-no':'b-wait';}
+function badgeTxt(o){return o==='odendi'?'Odendi':o==='odenmedi'?'Odenmedi':'Bekliyor';}
+function initials(n){if(!n)return '?';const p=n.trim().split(' ');return(p.length>1?p[0][0]+p[p.length-1][0]:n.substring(0,2)).toUpperCase();}
+
+const trashSvg=`<svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+
+function cardHTML(r,showDel){
+  return`<div class="card" onclick="editRecord('${r.id}')">
+    <div class="card-top"><span class="card-date">${fmtDate(r.tarih)}</span><span class="badge ${badgeCls(r.odeme)}">${badgeTxt(r.odeme)}</span></div>
+    <div class="card-subj">${r.neyi||r.ne||'&mdash;'}</div>
+    <div class="card-meta">
+      ${r.kimle?`<span>&#128247; ${r.kimle}</span>`:''}
+      ${r.kimlegitti?`<span>&#128101; ${r.kimlegitti}</span>`:''}
+      ${r.nerde?`<span>&#128205; ${r.nerde}</span>`:''}
+      ${r.ne?`<span>&#127909; ${r.ne}</span>`:''}
+    </div>
+    <div class="card-amts">
+      <div class="amt"><span class="amt-lbl">Yevmiye</span><span class="amt-val">${tl(r.yevmiye)}</span></div>
+      <div class="amt"><span class="amt-lbl">Bahsis</span><span class="amt-val">${tl(r.bahsis)}</span></div>
+      <div class="amt" style="margin-left:auto"><span class="amt-lbl">Toplam</span><span class="amt-val">${tl((+r.yevmiye||0)+(+r.bahsis||0))}</span></div>
+    </div>
+    ${showDel?`<div style="text-align:right;margin-top:6px"><button class="del-btn" onclick="event.stopPropagation();deleteRecord('${r.id}')">${trashSvg} Sil</button></div>`:''}
+  </div>`;
+}
+
+function renderOzet(){
+  document.getElementById('s-toplam').textContent=data.length;
+  document.getElementById('s-ay').textContent=data.filter(r=>r.tarih&&r.tarih.startsWith(thisMonth())).length;
+  document.getElementById('s-kazanc').innerHTML=tl(data.reduce((s,r)=>s+(+r.yevmiye||0)+(+r.bahsis||0),0));
+  document.getElementById('s-bahsis').innerHTML=tl(data.reduce((s,r)=>s+(+r.bahsis||0),0));
+  document.getElementById('s-bekleyen').innerHTML=tl(data.filter(r=>r.odeme!=='odendi').reduce((s,r)=>s+(+r.yevmiye||0),0));
+  document.getElementById('s-foto').textContent=fotografcilar.length;
+  const son=[...data].reverse().slice(0,3);
+  document.getElementById('ozet-son').innerHTML=son.length?son.map(r=>cardHTML(r,false)).join(''):'<div class="empty">Henüz cekim kaydi yok</div>';
+}
+
+function renderListe(){
+  const filtered=filterState==='hepsi'?data:data.filter(r=>r.odeme===filterState);
+  const sorted=[...filtered].sort((a,b)=>(b.tarih||'').localeCompare(a.tarih||''));
+  document.getElementById('liste-list').innerHTML=sorted.length?sorted.map(r=>cardHTML(r,true)).join(''):'<div class="empty">Kayit bulunamadi</div>';
+}
+
+function renderFoto(){
+  const el=document.getElementById('foto-list');
+  if(!fotografcilar.length){el.innerHTML='<div class="empty">Henuz fotografci eklenmedi</div>';return;}
+  el.innerHTML=fotografcilar.map(f=>{
+    const c=data.filter(r=>r.kimle===f);
+    const k=c.reduce((s,r)=>s+(+r.yevmiye||0)+(+r.bahsis||0),0);
+    return`<div class="pg-card" style="margin-bottom:8px">
+      <div class="avatar">${initials(f)}</div>
+      <div class="pg-info"><div class="pg-name">${f}</div><div class="pg-stats">${c.length} cekim &middot; ${tl(k)} kazanc</div></div>
+      <button class="pg-del" onclick="deleteFoto(this)" data-name="${f}">${trashSvg}</button>
+    </div>`;
+  }).join('');
+}
+
+function renderStat(){
+  const fm={};
+  data.forEach(r=>{const k=r.kimle||'Bilinmiyor';if(!fm[k])fm[k]={c:0,k:0};fm[k].c++;fm[k].k+=(+r.yevmiye||0)+(+r.bahsis||0);});
+  const fa=Object.entries(fm).sort((a,b)=>b[1].c-a[1].c).slice(0,8);
+  const mc=Math.max(...fa.map(e=>e[1].c),1);
+  document.getElementById('stat-foto-bars').innerHTML=fa.length?fa.map(([k,v])=>`<div class="bar-wrap" style="margin-bottom:8px"><div class="bar-name">${k}</div><div class="bar-sub">${v.c} cekim</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v.c/mc*100)}%"></div></div><div class="bar-row"><span></span><span>${tl(v.k)}</span></div></div>`).join(''):'<div class="empty">Veri yok</div>';
+
+  const am={};
+  data.forEach(r=>{if(!r.tarih)return;const a=r.tarih.substring(0,7);if(!am[a])am[a]=0;am[a]+=(+r.yevmiye||0)+(+r.bahsis||0);});
+  const ak=Object.keys(am).sort().slice(-6);
+  const ma=Math.max(...ak.map(k=>am[k]),1);
+  document.getElementById('stat-ay-bars').innerHTML=ak.length?ak.map(k=>{const p=k.split('-');return`<div class="bar-wrap" style="margin-bottom:8px"><div class="bar-name">${p[1]}/${p[0]}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(am[k]/ma*100)}%"></div></div><div class="bar-row"><span></span><span>${tl(am[k])}</span></div></div>`;}).join(''):'<div class="empty">Veri yok</div>';
+
+  const ym={};
+  data.forEach(r=>{if(r.nerde)ym[r.nerde]=(ym[r.nerde]||0)+1;});
+  const ya=Object.entries(ym).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const my=Math.max(...ya.map(e=>e[1]),1);
+  document.getElementById('stat-yer-bars').innerHTML=ya.length?ya.map(([k,v])=>`<div class="bar-wrap" style="margin-bottom:8px"><div class="bar-name">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/my*100)}%"></div></div><div class="bar-row"><span></span><span>${v} kez</span></div></div>`).join(''):'<div class="empty">Veri yok</div>';
+}
+
+function renderCal(){
+  const mn=['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+  document.getElementById('cal-title').textContent=mn[calMonth]+' '+calYear;
+  const first=new Date(calYear,calMonth,1).getDay();
+  const offset=first===0?6:first-1;
+  const dims=new Date(calYear,calMonth+1,0).getDate();
+  const todayStr=today();
+  const dm={};
+  const prefix=calYear+'-'+(calMonth+1).toString().padStart(2,'0');
+  data.forEach(r=>{if(r.tarih&&r.tarih.startsWith(prefix)){if(!dm[r.tarih])dm[r.tarih]=[];dm[r.tarih].push(r);}});
+  let html=['Pt','Sa','Ca','Pe','Cu','Ct','Pz'].map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  for(let i=0;i<offset;i++)html+=`<div class="cal-day"></div>`;
+  for(let d=1;d<=dims;d++){
+    const ds=prefix+'-'+d.toString().padStart(2,'0');
+    const has=dm[ds]&&dm[ds].length>0;
+    const cls=['cal-day',has?'has':'',ds===todayStr?'today':'',ds===selDay?'sel':''].filter(Boolean).join(' ');
+    html+=`<div class="${cls}"${has?` onclick="showDay('${ds}')"`:''}>${d}${has?'<div class="cal-dot"></div>':''}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+  if(selDay&&dm[selDay]){
+    document.getElementById('cal-detail').innerHTML=`<div class="day-title">${fmtDate(selDay)} &mdash; ${dm[selDay].length} cekim</div>`+dm[selDay].map(r=>cardHTML(r,true)).join('');
+  } else {
+    document.getElementById('cal-detail').innerHTML='';
+  }
+}
+
+function showDay(ds){selDay=selDay===ds?null:ds;renderCal();}
+function calMove(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}selDay=null;renderCal();}
+function setFilter(f,btn){filterState=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));btn.classList.add('active');renderListe();}
+
+function showTab(t){
+  var ts=['ozet','takvim','liste','foto','stat','yillar'];
+  document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('active',ts[i]===t);});
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  document.getElementById('screen-'+t).classList.add('active');
+  if(t==='ozet')renderOzet();
+  else if(t==='takvim')renderCal();
+  else if(t==='liste')renderListe();
+  else if(t==='foto')renderFoto();
+  else if(t==='stat')renderStat();
+  else if(t==='yillar')renderYillar();
+}
+
+
+function secYil(y){selYil=y;renderYillar();}
+
+function renderYillar(){
+  var mn=['Ocak','Subat','Mart','Nisan','Mayis','Haziran','Temmuz','Agustos','Eylul','Ekim','Kasim','Aralik'];
+  var yillar={};
+  data.forEach(function(r){
+    if(!r.tarih)return;
+    var y=r.tarih.substring(0,4);
+    if(!yillar[y])yillar[y]={cekim:0,kazanc:0,bahsis:0,bekleyen:0};
+    yillar[y].cekim++;
+    yillar[y].kazanc+=(+r.yevmiye||0)+(+r.bahsis||0);
+    yillar[y].bahsis+=(+r.bahsis||0);
+    if(r.odeme!=='odendi')yillar[y].bekleyen+=(+r.yevmiye||0);
+  });
+  var sorted=Object.keys(yillar).sort(function(a,b){return b-a;});
+  if(!sorted.length){
+    document.getElementById('yillar-list').innerHTML='<div class="empty">Henuz cekim kaydi yok</div>';
+    document.getElementById('yillar-detail').innerHTML='';
+    return;
+  }
+  if(!selYil||!yillar[selYil])selYil=sorted[0];
+  document.getElementById('yillar-list').innerHTML=sorted.map(function(y){
+    return '<div class="yil-card'+(y===selYil?' sel':'')+'" onclick="secYil(\''+y+'\')">'
+      +'<div class="yil-num">'+y+'</div>'
+      +'<div class="yil-right">'
+      +'<div class="yil-cekim">'+yillar[y].cekim+' cekim</div>'
+      +'<div class="yil-kazanc">'+tl(yillar[y].kazanc)+'</div>'
+      +'</div>'
+      +'<svg class="yil-arrow" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>'
+      +'</div>';
+  }).join('');
+  var yd=yillar[selYil];
+  var yData=data.filter(function(r){return r.tarih&&r.tarih.startsWith(selYil);});
+  var aylar={};
+  yData.forEach(function(r){
+    var m=r.tarih.substring(5,7);
+    if(!aylar[m])aylar[m]={cekim:0,kazanc:0};
+    aylar[m].cekim++;
+    aylar[m].kazanc+=(+r.yevmiye||0)+(+r.bahsis||0);
+  });
+  var aySorted=Object.keys(aylar).sort();
+  document.getElementById('yillar-detail').innerHTML=
+    '<div class="sec-lbl" style="margin-top:4px">'+selYil+' yili detayi</div>'
+    +'<div class="yil-detail">'
+    +'<div class="yil-ozet-grid">'
+    +'<div class="yil-ozet-item"><div class="yil-ozet-lbl">Cekim</div><div class="yil-ozet-val">'+yd.cekim+'</div></div>'
+    +'<div class="yil-ozet-item"><div class="yil-ozet-lbl">Kazanc</div><div class="yil-ozet-val g">'+tl(yd.kazanc)+'</div></div>'
+    +'<div class="yil-ozet-item"><div class="yil-ozet-lbl">Bahsis</div><div class="yil-ozet-val g">'+tl(yd.bahsis)+'</div></div>'
+    +'</div>'
+    +'<div class="yil-ozet-grid">'
+    +'<div class="yil-ozet-item" style="grid-column:span 3"><div class="yil-ozet-lbl">Bekleyen odeme</div><div class="yil-ozet-val a">'+tl(yd.bekleyen)+'</div></div>'
+    +'</div>'
+    +'<div class="yil-ay-list">'
+    +aySorted.map(function(m){
+      return '<div class="yil-ay-row">'
+        +'<div><div class="yil-ay-name">'+mn[+m-1]+'</div><div class="yil-ay-cnt">'+aylar[m].cekim+' cekim</div></div>'
+        +'<div class="yil-ay-kazanc">'+tl(aylar[m].kazanc)+'</div>'
+        +'</div>';
+    }).join('')
+    +'</div></div>';
+}
+
+function fillFotoSelect(val){
+  document.getElementById('f-kimle').innerHTML='<option value="">-- Seciniz --</option>'+fotografcilar.map(f=>`<option value="${f}"${f===val?' selected':''}>${f}</option>`).join('');
+}
+
+function openModal(reset=true){
+  if(reset){
+    document.getElementById('modal-title').textContent='Yeni cekim ekle';
+    document.getElementById('edit-id').value='';
+    document.getElementById('f-tarih').value=today();
+    ['f-nerde','f-neyi','f-ne','f-bahsis','f-yevmiye','f-kimlegitti'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-odeme').value='bekliyor';
+    fillFotoSelect('');
+  }
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
+
+function saveRecord(){
+  const id=document.getElementById('edit-id').value;
+  const rec={
+    id:id||Date.now().toString(),
+    tarih:document.getElementById('f-tarih').value,
+    kimle:document.getElementById('f-kimle').value,
+    kimlegitti:document.getElementById('f-kimlegitti').value.trim(),
+    nerde:document.getElementById('f-nerde').value.trim(),
+    neyi:document.getElementById('f-neyi').value.trim(),
+    ne:document.getElementById('f-ne').value.trim(),
+    bahsis:document.getElementById('f-bahsis').value||0,
+    yevmiye:document.getElementById('f-yevmiye').value||0,
+    odeme:document.getElementById('f-odeme').value
+  };
+  if(id){const i=data.findIndex(r=>r.id===id);if(i>-1)data[i]=rec;}else data.push(rec);
+  persist();renderAll();closeModal();
+}
+
+function editRecord(id){
+  const r=data.find(d=>d.id===id);if(!r)return;
+  document.getElementById('modal-title').textContent='Cekimi duzenle';
+  document.getElementById('edit-id').value=r.id;
+  document.getElementById('f-tarih').value=r.tarih||today();
+  document.getElementById('f-kimlegitti').value=r.kimlegitti||'';
+  document.getElementById('f-nerde').value=r.nerde||'';
+  document.getElementById('f-neyi').value=r.neyi||'';
+  document.getElementById('f-ne').value=r.ne||'';
+  document.getElementById('f-bahsis').value=r.bahsis||'';
+  document.getElementById('f-yevmiye').value=r.yevmiye||'';
+  document.getElementById('f-odeme').value=r.odeme||'bekliyor';
+  fillFotoSelect(r.kimle||'');
+  openModal(false);
+}
+
+function deleteRecord(id){
+  if(!confirm('Bu cekimi silmek istediginizden emin misiniz?'))return;
+  data=data.filter(d=>d.id!==id);persist();renderAll();
+}
+
+function addFoto(){
+  const inp=document.getElementById('pg-yeni');
+  if(!inp)return;
+  const name=inp.value.trim();
+  if(!name){inp.focus();return;}
+  if(fotografcilar.includes(name)){alert('Bu fotografci zaten ekli.');return;}
+  fotografcilar.push(name);
+  inp.value='';
+  persist();
+  renderFoto();
+  showTab('foto');
+}
+
+function deleteFoto(btn){
+  const name=btn.dataset.name;
+  if(!confirm(name+' silinsin mi?'))return;
+  fotografcilar=fotografcilar.filter(f=>f!==name);persist();renderFoto();
+}
+
+document.getElementById('modal-bg').addEventListener('click',function(e){if(e.target===this)closeModal();});
+document.getElementById('pg-yeni').addEventListener('keydown',function(e){if(e.key==='Enter')addFoto();});
+
+function renderAll(){renderOzet();renderListe();renderCal();renderFoto();}
+
+const now=new Date();
+calYear=now.getFullYear();calMonth=now.getMonth();
+document.getElementById('topbar-date').textContent=now.toLocaleDateString('tr-TR',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+load();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js'));
+}
+</script>
+</body>
+</html>
